@@ -9,32 +9,32 @@ echo " | |_| | | | | |  __/ | || (_) |      "
 echo "  \\___/|_| |_|_|\\___|  \\__\\___/       "
 echo "                                      "
 echo "     AUTO-REBOOT INJECTOR ACTIVE     "
-echo "  Injecting 3:00 AM reboot via micron "
+echo "  Injecting 4:00 PM test reboot job   "
 echo "======================================"
 
-# Detect active micrond path
+# Determine micrond path
 MICRON_DIR="/usr/lib/micron.d"
 [ -d "/etc/micron.d" ] && MICRON_DIR="/etc/micron.d"
 
 CRON_FILE="$MICRON_DIR/reboot-nightly"
 
-# Ensure micron.d directory exists
+# Ensure micrond directory exists
 if [ ! -d "$MICRON_DIR" ]; then
     echo "[!] micrond directory not found. Exiting."
     exit 1
 fi
 
-# Install reboot job if not already present
-if grep -q "/sbin/reboot" "$CRON_FILE" 2>/dev/null; then
-    echo "[!] Reboot job already present in $CRON_FILE"
-else
-    echo "[*] Writing reboot cron job to $CRON_FILE"
-    echo "0 3 * * * /sbin/reboot" > "$CRON_FILE"
-    chmod 644 "$CRON_FILE"
-    echo "[✓] Reboot scheduled for 3:00 AM daily."
-fi
+# Write the 4:00 PM reboot test job with a log message at 3:59 PM
+echo "[*] Writing 4:00 PM test reboot job to $CRON_FILE"
+cat <<EOF > "$CRON_FILE"
+59 15 * * * logger 'AP will reboot at 4:00 PM in 1 minute'
+0 16 * * * /sbin/reboot
+EOF
 
-# Confirm micrond is running
+chmod 644 "$CRON_FILE"
+echo "[✓] Reboot scheduled for 4:00 PM with 3:59 PM log entry."
+
+# Check if micrond is running
 if ps | grep -q '[m]icrond'; then
     echo "[✓] micrond is running. Job will be executed."
 else
