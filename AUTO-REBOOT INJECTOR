@@ -3,31 +3,29 @@
 echo "========================================"
 echo "  🔁 AUTO-REBOOT INJECTOR (TEST MODE)   "
 echo "========================================"
-echo "[*] Scheduling reboot for 4:27 PM today..."
+echo "[*] Scheduling reboot for 4:40 PM today..."
 
 CRON_DIR="/usr/lib/micron.d"
 CRON_FILE="$CRON_DIR/reboot-nightly"
 
-# Create the test cron job
+# Write the cron job
 cat <<EOF > "$CRON_FILE"
-26 16 * * * logger 'AP will reboot at 4:27 PM in 1 minute'
-27 16 * * * /sbin/reboot
+39 16 * * * logger 'AP will reboot at 4:40 PM in 1 minute'
+40 16 * * * /sbin/reboot
 EOF
 
-# Set correct permissions
+# Set proper permissions
 chmod 644 "$CRON_FILE"
 
-echo "[✓] Cron job written to $CRON_FILE"
-echo "[✓] Job: log at 4:26 PM, reboot at 4:27 PM"
-
-# Get micrond PID and reload it
-PID=$(ps | grep '[m]icrond' | awk '{print $1}')
+# Reload micrond
+PID=$(pidof micrond)
 if [ -n "$PID" ]; then
   kill -1 "$PID"
   echo "[✓] micrond reloaded (PID: $PID)"
 else
-  echo "[!] micrond not running — attempting to start it..."
+  echo "[!] micrond not running — starting it..."
   /usr/sbin/micrond "$CRON_DIR" &
 fi
 
-echo "[✓] Done. Awaiting 4:27 PM reboot test..."
+echo "[✓] Reboot scheduled at 4:40 PM."
+echo "========================================"
