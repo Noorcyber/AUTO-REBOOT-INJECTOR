@@ -1,40 +1,33 @@
 #!/bin/sh
 
-echo "======================================"
-echo "   ___        _        _              "
-echo "  / _ \\ _ __ (_) ___  | |_ ___        "
-echo " | | | | '_ \\| |/ _ \\ | __/ _ \\       "
-echo " | |_| | | | | |  __/ | || (_) |      "
-echo "  \\___/|_| |_|_|\\___|  \\__\\___/       "
-echo "                                      "
-echo "     AUTO-REBOOT INJECTOR ACTIVE     "
-echo "  Injecting 4:10 PM test reboot job   "
-echo "======================================"
+echo "========================================"
+echo "  🔁 AUTO-REBOOT INJECTOR (TEST MODE)   "
+echo "========================================"
+echo "[*] Scheduling reboot for 4:27 PM today..."
 
-MICRON_DIR="/usr/lib/micron.d"
-[ -d "/etc/micron.d" ] && MICRON_DIR="/etc/micron.d"
+CRON_DIR="/usr/lib/micron.d"
+CRON_FILE="$CRON_DIR/reboot-nightly"
 
-CRON_FILE="$MICRON_DIR/reboot-nightly"
-
-# Check micron.d directory exists
-if [ ! -d "$MICRON_DIR" ]; then
-    echo "[!] ERROR: micrond directory not found at $MICRON_DIR"
-    exit 1
-fi
-
-# Write test reboot job for 4:10 PM with logger at 4:09 PM
+# Create the test cron job
 cat <<EOF > "$CRON_FILE"
-9 16 * * * logger 'AP will reboot at 4:10 PM in 1 minute'
-10 16 * * * /sbin/reboot
+26 16 * * * logger 'AP will reboot at 4:27 PM in 1 minute'
+27 16 * * * /sbin/reboot
 EOF
 
+# Set correct permissions
 chmod 644 "$CRON_FILE"
-echo "[✓] Reboot scheduled for 4:10 PM daily with 4:09 PM logger."
 
-# Restart micrond to reload cron jobs
-killall micrond
-/usr/sbin/micrond "$MICRON_DIR" &
+echo "[✓] Cron job written to $CRON_FILE"
+echo "[✓] Job: log at 4:26 PM, reboot at 4:27 PM"
 
-echo "[✓] micrond restarted and monitoring $MICRON_DIR"
+# Get micrond PID and reload it
+PID=$(ps | grep '[m]icrond' | awk '{print $1}')
+if [ -n "$PID" ]; then
+  kill -1 "$PID"
+  echo "[✓] micrond reloaded (PID: $PID)"
+else
+  echo "[!] micrond not running — attempting to start it..."
+  /usr/sbin/micrond "$CRON_DIR" &
+fi
 
-exit 0
+echo "[✓] Done. Awaiting 4:27 PM reboot test..."
