@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# Location of reboot binary
+REBOOT_CMD="/sbin/reboot"
+CRON_JOB="0 3 * * * $REBOOT_CMD"
+
+# Temp crontab file
+TMP_CRON="/tmp/current_cron"
+
+echo "[*] Backing up existing crontab (if any)..."
+crontab -l 2>/dev/null > $TMP_CRON || touch $TMP_CRON
+
+# Check if reboot job already exists
+if grep -q "$REBOOT_CMD" "$TMP_CRON"; then
+    echo "[!] Reboot cron job already exists. Skipping."
+else
+    echo "[*] Adding reboot cron job..."
+    echo "$CRON_JOB" >> "$TMP_CRON"
+    crontab "$TMP_CRON"
+    echo "[✓] Reboot cron job added for 3:00 AM daily."
+fi
+
+# Enable and start cron
+/etc/init.d/cron enable
+/etc/init.d/cron start
+
+# Clean up
+rm "$TMP_CRON"
