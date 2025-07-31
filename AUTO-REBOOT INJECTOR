@@ -1,28 +1,44 @@
 #!/bin/sh
 
-# Location of reboot binary
-REBOOT_CMD="/sbin/reboot"
-CRON_JOB="0 3 * * * $REBOOT_CMD"
+# === AUTO-REBOOT INJECTOR ===
+echo "======================================"
+echo "   ___        _        _              "
+echo "  / _ \\ _ __ (_) ___  | |_ ___        "
+echo " | | | | '_ \\| |/ _ \\ | __/ _ \\       "
+echo " | |_| | | | | |  __/ | || (_) |      "
+echo "  \\___/|_| |_|_|\\___|  \\__\\___/       "
+echo "                                      "
+echo "     AUTO-REBOOT INJECTOR ACTIVE     "
+echo "  Injecting 3:00 AM reboot via micron "
+echo "======================================"
 
-# Temp crontab file
-TMP_CRON="/tmp/current_cron"
+# Detect active micrond path
+MICRON_DIR="/usr/lib/micron.d"
+[ -d "/etc/micron.d" ] && MICRON_DIR="/etc/micron.d"
 
-echo "[*] Backing up existing crontab (if any)..."
-crontab -l 2>/dev/null > $TMP_CRON || touch $TMP_CRON
+CRON_FILE="$MICRON_DIR/reboot-nightly"
 
-# Check if reboot job already exists
-if grep -q "$REBOOT_CMD" "$TMP_CRON"; then
-    echo "[!] Reboot cron job already exists. Skipping."
-else
-    echo "[*] Adding reboot cron job..."
-    echo "$CRON_JOB" >> "$TMP_CRON"
-    crontab "$TMP_CRON"
-    echo "[✓] Reboot cron job added for 3:00 AM daily."
+# Ensure micron.d directory exists
+if [ ! -d "$MICRON_DIR" ]; then
+    echo "[!] micrond directory not found. Exiting."
+    exit 1
 fi
 
-# Enable and start cron
-/etc/init.d/cron enable
-/etc/init.d/cron start
+# Install reboot job if not already present
+if grep -q "/sbin/reboot" "$CRON_FILE" 2>/dev/null; then
+    echo "[!] Reboot job already present in $CRON_FILE"
+else
+    echo "[*] Writing reboot cron job to $CRON_FILE"
+    echo "0 3 * * * /sbin/reboot" > "$CRON_FILE"
+    chmod 644 "$CRON_FILE"
+    echo "[✓] Reboot scheduled for 3:00 AM daily."
+fi
 
-# Clean up
-rm "$TMP_CRON"
+# Confirm micrond is running
+if ps | grep -q '[m]icrond'; then
+    echo "[✓] micrond is running. Job will be executed."
+else
+    echo "[!] micrond is NOT running. Attempting to start..."
+    /usr/sbin/micrond "$MICRON_DIR" &
+    echo "[✓] micrond started with $MICRON_DIR"
+fi
