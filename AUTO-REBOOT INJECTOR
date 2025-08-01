@@ -4,8 +4,8 @@ echo "[*] Scheduling reboot for 1:33 PM EST (18:33 UTC)..."
 
 # Create micrond cron job
 cat <<EOF > /usr/lib/micron.d/reboot-test
-32 18 * * * /usr/bin/logger 'AP will reboot at 1:33 PM EST (18:33 UTC) in 1 minute'
-33 18 * * * /sbin/reboot
+37 17 * * * /usr/bin/logger 'AP will reboot at 1:33 PM EST (18:33 UTC) in 1 minute'
+38 17 * * * /sbin/reboot
 EOF
 
 echo "[✓] Job written to /usr/lib/micron.d/reboot-test"
