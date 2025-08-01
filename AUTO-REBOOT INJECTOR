@@ -1,24 +1,30 @@
 #!/bin/sh
 
-echo "[*] Scheduling reboot for 1:33 PM EST (18:33 UTC)..."
+echo "[*] Scheduling a DAILY reboot at 08:00 UTC (3:00 AM EST)..."
 
-# Create micrond cron job
-cat <<EOF > /usr/lib/micron.d/reboot-test
-37 17 * * * /usr/bin/logger 'AP will reboot at 1:33 PM EST (18:33 UTC) in 1 minute'
-38 17 * * * /sbin/reboot
-EOF
+REBOOT_FILE="/usr/lib/micron.d/reboot-nightly"
 
-echo "[✓] Job written to /usr/lib/micron.d/reboot-test"
+# Write the logger notice and reboot command
+echo "44 17 * * * /usr/bin/logger 'AP will reboot in 1 minute (scheduled for 08:00 UTC / 3:00 AM EST)'" > "$REBOOT_FILE"
+echo "45 17 * * * /sbin/reboot" >> "$REBOOT_FILE"
 
-# Restart micrond to apply new schedule
+# Set proper permissions
+chmod 644 "$REBOOT_FILE"
+
+# Restart micrond to apply changes
 echo "[*] Restarting micrond..."
 killall micrond 2>/dev/null
+sleep 1
 /usr/sbin/micrond /usr/lib/micron.d &
 
 # Confirm micrond is running
-sleep 1
 if ps | grep -q '[m]icrond'; then
-  echo "[✓] micrond is running and watching for 18:33 UTC"
+    echo "[✓] micrond is running"
 else
-  echo "[✗] micrond failed to start!"
+    echo "[✗] micrond is NOT running!"
+    exit 1
 fi
+
+# Show current job contents
+echo "[*] Current cron job file:"
+cat "$REBOOT_FILE"
