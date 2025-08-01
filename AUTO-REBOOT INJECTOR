@@ -1,31 +1,32 @@
 #!/bin/sh
 
-echo "========================================"
-echo "  🔁 AUTO-REBOOT INJECTOR (TEST MODE)   "
-echo "========================================"
-echo "[*] Scheduling reboot for 4:40 PM today..."
+echo "[*] Creating test cron job for reboot in 2 minutes..."
 
-CRON_DIR="/usr/lib/micron.d"
-CRON_FILE="$CRON_DIR/reboot-nightly"
-
-# Write the cron job
-cat <<EOF > "$CRON_FILE"
-39 16 * * * logger 'AP will reboot at 4:40 PM in 1 minute'
-40 16 * * * /sbin/reboot
-EOF
-
-# Set proper permissions
-chmod 644 "$CRON_FILE"
-
-# Reload micrond
-PID=$(pidof micrond)
-if [ -n "$PID" ]; then
-  kill -1 "$PID"
-  echo "[✓] micrond reloaded (PID: $PID)"
-else
-  echo "[!] micrond not running — starting it..."
-  /usr/sbin/micrond "$CRON_DIR" &
+# Get current time + 2 minutes
+H=$(date +%H)
+M=$(date +%M)
+M_NEXT=$(( (10#$M + 2) % 60 ))
+if [ "$M_NEXT" -lt "$M" ]; then
+  H=$(( (10#$H + 1) % 24 ))
 fi
 
-echo "[✓] Reboot scheduled at 4:40 PM."
-echo "========================================"
+# Pad zeros
+M_PAD=$(printf "%02d" $M_NEXT)
+H_PAD=$(printf "%02d" $H)
+
+echo "[*] Scheduling reboot at $H_PAD:$M_PAD..."
+
+# Create reboot cron job
+cat <<EOF > /usr/lib/micron.d/reboot-now
+$((M_NEXT - 1)) $H_PAD * * * /usr/bin/logger 'AP will reboot in 1 minute'
+$M_PAD $H_PAD * * * /sbin/reboot
+EOF
+
+chmod 644 /usr/lib/micron.d/reboot-now
+
+# Reload micrond
+killall micrond
+/usr/sbin/micrond /usr/lib/micron.d &
+
+echo "[✓] Job set. Watching logs now:"
+logread -f | grep --line-buffered 'AP will reboot'
