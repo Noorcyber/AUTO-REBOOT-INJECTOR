@@ -1,20 +1,24 @@
 #!/bin/sh
 
-echo "[*] Restoring nightly 3:00 AM reboot job..."
+echo "[*] Installing test reboot job for 1:27 PM UTC..."
 
-# Remove other test jobs
-rm -f /usr/lib/micron.d/reboot-now /usr/lib/micron.d/test-job 2>/dev/null
-
-# Write 3AM job
-cat <<EOF > /usr/lib/micron.d/reboot-nightly
-59 2 * * * /usr/bin/logger 'AP will reboot at 3:00 AM in 1 minute'
-0 3 * * * /sbin/reboot
+# Write micrond job
+cat <<EOF > /usr/lib/micron.d/reboot-test
+26 13 * * * /usr/bin/logger 'AP will reboot at 1:27 PM UTC in 1 minute'
+27 13 * * * /sbin/reboot
 EOF
 
-chmod 644 /usr/lib/micron.d/reboot-nightly
+echo "[✓] Job written to /usr/lib/micron.d/reboot-test"
 
+# Restart micrond to ensure it picks up the new job
 echo "[*] Restarting micrond..."
 killall micrond 2>/dev/null
 /usr/sbin/micrond /usr/lib/micron.d &
 
-echo "[✓] Reboot job restored and scheduled for 3:00 AM."
+# Confirm running
+sleep 1
+if ps | grep -q '[m]icrond'; then
+  echo "[✓] micrond is running and will trigger reboot at 1:27 PM UTC"
+else
+  echo "[✗] micrond failed to start"
+fi
