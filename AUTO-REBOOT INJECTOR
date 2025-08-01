@@ -15,12 +15,12 @@ By Noor Shaheed Kaseya, Datto  Vol1 2025
 
 EOF
 
-echo "[*] Scheduling NIGHTLY reboot for 3:00 AM EST (08:00 UTC)..."
+echo "[*] Scheduling NIGHTLY reboot for 3:00 AM EST (07:00 UTC)..."
 
 # Create or update micrond job
 cat <<EOF > /usr/lib/micron.d/reboot-nightly
-52 17 * * * /usr/bin/logger 'AP will reboot at 3:00 AM EST (08:00 UTC) in 1 minute'
-53 17 * * * /sbin/reboot
+59 6 * * * /usr/bin/logger 'AP will reboot at 3:00 AM EST (07:00 UTC) in 1 minute'
+0 7 * * * /sbin/reboot
 EOF
 
 echo "[✓] Job written to /usr/lib/micron.d/reboot-nightly"
@@ -33,7 +33,7 @@ killall micrond 2>/dev/null
 # Confirm it's running
 sleep 1
 if ps | grep -q '[m]icrond'; then
-  echo "[✓] micrond is running and will reboot AP daily at 08:00 UTC (3:00 AM EST)"
+  echo "[✓] micrond is running and will reboot AP daily at 07:00 UTC (3:00 AM EST)"
 else
   echo "[✗] micrond failed to start!"
 fi
