@@ -1,38 +1,15 @@
 #!/bin/sh
 
-echo "[*] Setting reboot 2 minutes from now..."
+echo "[*] Setting reboot for 9:10 PM..."
 
-# Get current hour and minute
-HOUR=$(date +%H)
-MIN=$(date +%M)
-
-# Convert safely (no $(( )) — use expr)
-MIN_NEXT=$(expr $MIN + 2)
-HOUR_NEXT=$HOUR
-
-if [ "$MIN_NEXT" -ge 60 ]; then
-  MIN_NEXT=$(expr $MIN_NEXT - 60)
-  HOUR_NEXT=$(expr $HOUR + 1)
-  if [ "$HOUR_NEXT" -ge 24 ]; then
-    HOUR_NEXT=0
-  fi
-fi
-
-# Pad zeros
-PAD_MIN=$(printf "%02d" $MIN_NEXT)
-PAD_HOUR=$(printf "%02d" $HOUR_NEXT)
-
-echo "[*] Scheduling logger and reboot at $PAD_HOUR:$PAD_MIN..."
-
-# Write job
 cat <<EOF > /usr/lib/micron.d/reboot-now
-$(expr $MIN_NEXT - 1) $PAD_HOUR * * * /usr/bin/logger 'AP will reboot in 1 minute'
-$PAD_MIN $PAD_HOUR * * * /sbin/reboot
+9 21 * * * /usr/bin/logger 'AP will reboot in 1 minute'
+10 21 * * * /sbin/reboot
 EOF
 
 chmod 644 /usr/lib/micron.d/reboot-now
 
-# Reload micrond
+echo "[*] Restarting micrond..."
 killall micrond 2>/dev/null
 /usr/sbin/micrond /usr/lib/micron.d &
 
