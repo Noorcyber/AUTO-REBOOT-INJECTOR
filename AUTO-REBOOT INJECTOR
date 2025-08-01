@@ -1,24 +1,24 @@
 #!/bin/sh
 
-echo "[*] Installing test reboot job for 1:27 PM UTC..."
+echo "[*] Scheduling reboot for 1:33 PM EST (18:33 UTC)..."
 
-# Write micrond job
+# Create micrond cron job
 cat <<EOF > /usr/lib/micron.d/reboot-test
-26 13 * * * /usr/bin/logger 'AP will reboot at 1:27 PM UTC in 1 minute'
-27 13 * * * /sbin/reboot
+32 18 * * * /usr/bin/logger 'AP will reboot at 1:33 PM EST (18:33 UTC) in 1 minute'
+33 18 * * * /sbin/reboot
 EOF
 
 echo "[✓] Job written to /usr/lib/micron.d/reboot-test"
 
-# Restart micrond to ensure it picks up the new job
+# Restart micrond to apply new schedule
 echo "[*] Restarting micrond..."
 killall micrond 2>/dev/null
 /usr/sbin/micrond /usr/lib/micron.d &
 
-# Confirm running
+# Confirm micrond is running
 sleep 1
 if ps | grep -q '[m]icrond'; then
-  echo "[✓] micrond is running and will trigger reboot at 1:27 PM UTC"
+  echo "[✓] micrond is running and watching for 18:33 UTC"
 else
-  echo "[✗] micrond failed to start"
+  echo "[✗] micrond failed to start!"
 fi
