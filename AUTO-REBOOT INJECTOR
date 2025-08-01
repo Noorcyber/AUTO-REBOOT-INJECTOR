@@ -1,18 +1,20 @@
 #!/bin/sh
 
-echo "[*] Setting reboot for 9:10 PM..."
+echo "[*] Restoring nightly 3:00 AM reboot job..."
 
-cat <<EOF > /usr/lib/micron.d/reboot-now
-9 21 * * * /usr/bin/logger 'AP will reboot in 1 minute'
-10 21 * * * /sbin/reboot
+# Remove other test jobs
+rm -f /usr/lib/micron.d/reboot-now /usr/lib/micron.d/test-job 2>/dev/null
+
+# Write 3AM job
+cat <<EOF > /usr/lib/micron.d/reboot-nightly
+59 2 * * * /usr/bin/logger 'AP will reboot at 3:00 AM in 1 minute'
+0 3 * * * /sbin/reboot
 EOF
 
-chmod 644 /usr/lib/micron.d/reboot-now
+chmod 644 /usr/lib/micron.d/reboot-nightly
 
 echo "[*] Restarting micrond..."
 killall micrond 2>/dev/null
 /usr/sbin/micrond /usr/lib/micron.d &
 
-echo "[✓] Job installed. Watching for log trigger..."
-# Tail the log manually and look for your message
-logread | grep 'AP will reboot'
+echo "[✓] Reboot job restored and scheduled for 3:00 AM."
